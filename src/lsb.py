@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 input_secret_text_path = "./test/input_secret_text.txt"
 output_secret_text_path = "./test/output_secret_text.txt"
-raw_img_path = "./test/raw_img.bmp"
+# raw_img_path = "./test/raw_img.bmp"
 mod_img_path = "./test/mod_img.bmp"
 img_raw_and_mod_compare_path = "./test/img_raw_and_mod_compare.png"
 eof_str = "00000000"
@@ -13,9 +13,7 @@ eof = chr(int(eof_str, 2))
 """
 从文件中读取秘密信息
 """
-
-
-def get_text_from_file():
+def get_text_from_file(input_secret_text_path):
     file = open(input_secret_text_path, "r")
     text = file.read()
     file.close()
@@ -28,7 +26,7 @@ def get_text_from_file():
 """
 
 
-def get_raw_img():
+def get_raw_img(raw_img_path):
     raw_img = Image.open(raw_img_path)
     width = raw_img.size[0]
     height = raw_img.size[1]
@@ -162,39 +160,58 @@ def write_text_to_file(text):
     file.close()
 
 
-"""
-秘密信息嵌入和提取
-"""
-
-
-def main():
-    # 嵌入秘密信息
-    text = get_text_from_file()
-    raw_img = get_raw_img()
-    mod_img = insert_text_to_image(text, raw_img)
+def jiami(secret_text, src_img_path, mod_img_path):
+    # 加载起始图像
+    raw_img = get_raw_img(src_img_path)
+    # 信息融合
+    mod_img = insert_text_to_image(secret_text, raw_img)
+    # 加密图像存储
     mod_img.save(mod_img_path)
 
-    # 提取秘密信息
+def jiemi(mod_img_path):
+    # 打开文件
+    mod_img = Image.open(mod_img_path)
+    # 直接解密获取密文
     hidden_text = get_text_from_image(mod_img)
-    print(hidden_text)
-    write_text_to_file(hidden_text)
+    return hidden_text
 
-    # 构造对比图
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置
-    plt.rcParams['axes.unicode_minus'] = False
-    plt.subplot(121)
-    plt.title("原始载体图像")
-    plt.imshow(raw_img, cmap='gray')
-    plt.subplot(122)
-    plt.title("嵌有秘密信息的载体图像")
-    plt.imshow(mod_img, cmap='gray')
-    # 保存对比图
-    plt.savefig(img_raw_and_mod_compare_path)
-    # 显示对比图
-    plt.show()
-    print("finall")
+# """
+# 秘密信息嵌入和提取
+# """
 
 
-# 调用
-if __name__ == '__main__':
-    main()
+# def main():
+#     # 嵌入秘密信息
+#     text = get_text_from_file(input_secret_text_path)
+#     raw_img = get_raw_img("./test/raw_img.bmp")
+#     mod_img = insert_text_to_image(text, raw_img)
+#     mod_img.save("./test/mod_img.bmp")
+
+#     # 提取秘密信息
+#     hidden_text = get_text_from_image(mod_img)
+#     print(hidden_text)
+
+#     files = Image.open("./test/mod_img.bmp")
+#     hidden_text = get_text_from_image(files)
+#     print(hidden_text)
+#     write_text_to_file(hidden_text)
+
+#     # 构造对比图
+#     plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置
+#     plt.rcParams['axes.unicode_minus'] = False
+#     plt.subplot(121)
+#     plt.title("原始载体图像")
+#     plt.imshow(raw_img, cmap='gray')
+#     plt.subplot(122)
+#     plt.title("嵌有秘密信息的载体图像")
+#     plt.imshow(mod_img, cmap='gray')
+#     # 保存对比图
+#     plt.savefig(img_raw_and_mod_compare_path)
+#     # 显示对比图
+#     plt.show()
+#     print("finall")
+
+
+# # 调用
+# if __name__ == '__main__':
+#     main()

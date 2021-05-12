@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login0.css')}}">
+</head>
+<body>
+    <div class="login-header">
+        教育装备采购及信息管理云平台
+    </div>
+<div id="content">
+    <!-- <div class="login-header">
+        教育采购平台
+    </div> -->
+    <form action="" method="POST" id="nameform">
+        <div class="login-input-box">
+            <span class="icon icon-user"></span>
+            <input type="text" placeholder="创建你的账号">
+        </div>
+        <div class="login-input-box">
+            <span class="icon icon-password"></span>
+            <input type="password" placeholder="创建你的账号密码">
+        </div>
+    </form>
+	<div class="remember-box">
+        <label>
+            <input type="checkbox"> 记住我
+        </label>
+    </div>
+    <div class="login-button-box">
+        <button type="submit" form="nameform">注 册</button>
+        <p></p>
+        <a href="/login">
+            <button>返回登陆</button>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

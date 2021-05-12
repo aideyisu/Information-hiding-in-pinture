@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>解密</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login0.css')}}">
+</head>
+
+<body>
+    <div id="header">
+        <div id="history">
+            <button type="button">
+                <a href="/">主界面</a>
+            </button>
+        </div>
+    </div>
+    <div class="login-header">
+        信息加密云平台
+    </div>
+
+    <div id="content">
+    <p> 密文为 </p>
+    <p>{{ secret_text }}</p>
+    </div>
+</body>
+
+</html>

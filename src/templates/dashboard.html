@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>主界面</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/dashboard.css')}}">
+</head>
+
+<body>
+{% if manager == 1 %}
+    <div class="login-header">
+        信息加密云平台 - 管理员界面
+    </div>
+    <div id="content">
+        <div class="login-button-box">
+    
+            <a href="/search">
+                <button>采购查询</button>
+            </a>
+            <p></p>
+            <a href="/purchase">
+                <button>订单管理</button>
+            </a>
+            <p></p>
+            <a href="/manager_user">
+                <button>全部账号管理</button>
+            </a>
+            <p></p>
+            <a href="/manager_data">
+                <button>全部采购管理</button>
+            </a>
+            <p></p>
+            <a href="/manager_purchase">
+                <button>全部订单管理</button>
+            </a>
+            <p></p>
+            <a href="/logout">
+                <button>注 销</button>
+            </a>
+        </div>
+    </div>
+
+{% elif manager == 0 %}
+    <div class="login-header">
+        教育装备采购及信息管理云平台
+    </div>
+    <div id="content">
+
+        <div class="login-button-box">
+
+            <a href="/upload">
+                <button>图像加密</button>
+            </a>
+            <p></p>
+            <a href="/jiemi">
+                <button>图像解密(服务器端文件)</button>
+            </a>
+            <p></p>
+            <a href="/jiemi2">
+                <button>图像解密(上传文件)</button>
+            </a>
+            <p></p>
+            <a href="/">
+                <button>历史上传记录</button>
+            </a>
+            <p></p>
+            <a href="/logout">
+                <button>注 销</button>
+            </a>
+        </div>
+    </div>
+{% endif %}
+</body>
+
+</html>
