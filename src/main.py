@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import datetime
 from pathlib import Path
 
 from flask import Flask, render_template, Response, redirect, url_for,\
@@ -10,17 +11,14 @@ from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, current_user, \
     login_required, login_user, logout_user
+
 import pymysql
+pymysql.install_as_MySQLdb()
 
 # 本地内部引用
 import lsb
 
-pymysql.install_as_MySQLdb()
-
-
 app = Flask(__name__, static_folder="static")
-# PyClone 处理记录文件
-open_file_name = "log_pyclone.txt"
 
 # config
 app.config.update(
@@ -66,6 +64,43 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return "%d/%s/%s/%s" % (self.id, self.name, self.phone, self.password)
+
+
+class Operate(db.Model):
+    # 定义表名
+    __tablename__ = 'oparate'
+    # 定义字段
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    # 用户id
+    uid = db.Column(db.Integer, index=True)
+    # 操作类型 （1上传源图片 2从服务端解密 3上传加密图片解密）
+    op_type = db.Column(db.Integer, index=True)
+    # 操作具体名称
+    type_name = db.Column(db.String(64), index=True)
+    # 相关文件名
+    filename = db.Column(db.String(64), index=True)
+    # 操作结果 (0成功 非0失败)
+    op_result = db.Column(db.Integer, index=True)
+    # 失败原因
+    fail_source = db.Column(db.String(64), index=True)
+    # 操作时间
+    ctime = db.Column(db.DateTime, default=datetime.datetime.now)
+
+    def __init__(self, uid, op_type, filename, op_result, fail_source):
+        self.uid = uid
+        self.op_type = op_type
+        if op_type == 1:
+            self.type_name = "上传原图"
+        elif op_type == 2:
+            self.type_name = "服务端解密"
+        elif op_type == 3:
+            self.type_name = "上传解密"
+        else:
+            self.type_name = "未定义"
+        self.filename = filename
+        self.op_result = op_result
+        self.fail_source = fail_source
+
 
 # 判断是否为管理员 现阶段直接以 user_id 是否为1 来判断
 def is_admin(user_id):
@@ -127,19 +162,13 @@ def mimi():  # 加密模块 - 使用密文加密
 
         # 检测是否存在对应路径
         my_file = Path(f'{basepath}/static/uploads/{str(user_id)}mod')
-        if my_file.is_dir():
-            # 存在
-            print(f'路径存在 {my_file}')
-        else:
+        if not my_file.is_dir():
             # 不存在
             os.mkdir(my_file)  # 只能创建单级目录
             print(f'路径不存在 {my_file}')
 
         my_file = Path(f'{basepath}/static/uploads/{str(user_id)}')
-        if my_file.is_dir():
-            # 存在
-            print(f'路径存在 {my_file}')
-        else:
+        if not my_file.is_dir():
             # 不存在
             os.mkdir(my_file)  # 只能创建单级目录
             print(f'路径不存在 {my_file}')
@@ -158,7 +187,9 @@ def mimi():  # 加密模块 - 使用密文加密
         print(secret_text, src_img_path, mod_img_path)
 
         lsb.jiami(secret_text, src_img_path, mod_img_path)
-        # 展示加密后结果
+        # 记录行为记录
+        db.session.add(Operate(user_id, 1, secure_filename(f.filename), 0, ""))
+        db.session.commit()
         return render_template("upload_result.html", mod_img_path=secure_filename(f.filename))
 
     return render_template("upload.html")
@@ -179,7 +210,10 @@ def demi():
         # 加密图像路径
         # mod_img_path = post_info.get("mod_img_path")
         mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{post_info.get("mod_img_path")}.bmp'
-        
+        # 记录行为记录
+        db.session.add(
+            Operate(user_id, 2, post_info.get("mod_img_path")+".bmp", 0, ""))
+        db.session.commit()
         secret_text = lsb.jiemi(mod_img_path)
         print(secret_text)
 
@@ -200,10 +234,7 @@ def demi2():
 
         # 检测是否存在对应路径
         my_file = Path(f'{basepath}/static/uploads/{str(user_id)}self')
-        if my_file.is_dir():
-            # 存在
-            print(f'路径存在 {my_file}')
-        else:
+        if not my_file.is_dir():
             # 不存在
             os.mkdir(my_file)  # 只能创建单级目录
             print(f'路径不存在 {my_file}')
@@ -211,7 +242,10 @@ def demi2():
         mod_img_path = f'{basepath}/static/uploads/{str(user_id)}self/{secure_filename(f.filename)}'
         f.save(mod_img_path)
         secret_text = lsb.jiemi(mod_img_path)
-
+        # 记录行为记录
+        db.session.add(Operate(user_id, 3, secure_filename(f.filename), 0, ""))
+        db.session.commit()
+        
         return render_template("/jiemi_result.html", secret_text=secret_text)
     return render_template("jiemi2.html")
 
@@ -229,6 +263,21 @@ def download(mod_img_path):
     # 展示加密图片 提供下载
     basepath = os.path.dirname(__file__)  # 当前文件所在路径
     return send_from_directory(f"{basepath}/static/uploads/{current_user.id}mod", filename=mod_img_path, as_attachment=True)
+
+
+@app.route("/history")
+@login_required
+def history_list():
+    # history list
+    # 历史操作记录
+    uid = current_user.id
+    # 检测是否存在对应路径,读取list
+    history_operate_list = Operate.query.filter_by(uid=uid).all()
+
+    for item in history_operate_list:
+        print(item)
+        print(item.type_name)
+    return render_template("history_list.html",history_operate_list = history_operate_list, uid=uid)
 
 
 @app.errorhandler(401)

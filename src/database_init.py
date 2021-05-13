@@ -16,10 +16,8 @@ class Config(object):
     # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://%s:%s@127.0.0.1:3306/%s' % ("root","123456","test")
     # 设置sqlalchemy自动更跟踪数据库
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-
     # 查询时会显示原始SQL语句
     app.config['SQLALCHEMY_ECHO'] = True
-
     # 禁止自动提交数据处理
     app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = False
 
@@ -44,6 +42,43 @@ class User(db.Model):
         self.phone = phone
         self.password = password
 
+
+class Operate(db.Model):
+    # 定义表名
+    __tablename__ = 'oparate'
+    # 定义字段
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    # 用户id
+    uid = db.Column(db.Integer, index=True)
+    # 操作类型 （1上传源图片 2从服务端解密 3上传加密图片解密）
+    op_type = db.Column(db.Integer, index=True)
+    # 操作具体名称
+    type_name = db.Column(db.String(64), index=True)
+    # 相关文件名
+    filename = db.Column(db.String(64), index=True)
+    # 操作结果 (0成功 非0失败)
+    op_result = db.Column(db.Integer, index=True)
+    # 失败原因
+    fail_source = db.Column(db.String(64), index=True)
+    # 操作时间
+    ctime = db.Column(db.DateTime, default=datetime.datetime.now)
+    
+    def __init__(self, uid, op_type, filename, op_result, fail_source):
+        self.uid = uid
+        self.op_type = op_type
+        if op_type == 1:
+            self.type_name = "上传原图"
+        elif op_type == 2:
+            self.type_name = "服务端解密"
+        elif op_type == 3:
+            self.type_name = "上传解密"
+        else:
+            self.type_name = "未定义"
+        self.filename = filename
+        self.op_result = op_result
+        self.fail_source = fail_source
+
+
 if __name__ == '__main__':
     # 删除所有表
     db.drop_all()
@@ -59,5 +94,4 @@ if __name__ == '__main__':
         password = name + "pw"
         db.session.add(User(name, phone, password))
         db.session.commit()
-
-
+        
