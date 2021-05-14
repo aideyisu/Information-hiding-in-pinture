@@ -18,6 +18,9 @@ pymysql.install_as_MySQLdb()
 # 本地内部引用
 import lsb
 
+# 罪恶的全局变量
+all_method = ["lsb", "none"]
+
 app = Flask(__name__, static_folder="static")
 
 # config
@@ -75,6 +78,8 @@ class Operate(db.Model):
     uid = db.Column(db.Integer, index=True)
     # 操作类型 （1上传源图片 2从服务端解密 3上传加密图片解密）
     op_type = db.Column(db.Integer, index=True)
+    # 加解密方式
+    sec_type = db.Column(db.String(64), index=True)
     # 操作具体名称
     type_name = db.Column(db.String(64), index=True)
     # 相关文件名
@@ -86,17 +91,22 @@ class Operate(db.Model):
     # 操作时间
     ctime = db.Column(db.DateTime, default=datetime.datetime.now)
 
-    def __init__(self, uid, op_type, filename, op_result, fail_source):
+    def __init__(self, uid, op_type, sec_type, filename, op_result, fail_source):
         self.uid = uid
         self.op_type = op_type
+        self.sec_type = sec_type
         if op_type == 1:
-            self.type_name = "上传原图"
+            # 上传原图
+            self.type_name = "upload source picture"
         elif op_type == 2:
-            self.type_name = "服务端解密"
+            # 服务端解密
+            self.type_name = "server decode"
         elif op_type == 3:
-            self.type_name = "上传解密"
+            # 上传解密
+            self.type_name = "upload decode"
         else:
-            self.type_name = "未定义"
+            # 尚未定义 undefined
+            self.type_name = "undefined"
         self.filename = filename
         self.op_result = op_result
         self.fail_source = fail_source
@@ -153,8 +163,10 @@ def register():
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
 def mimi():  # 加密模块 - 使用密文加密
+
     if request.method == "POST":
         # 前期准备
+        post_info = request.form.to_dict()
         f = request.files['file']
         basepath = os.path.dirname(__file__)  # 当前文件所在路径
         user_id = current_user.id
@@ -177,7 +189,10 @@ def mimi():  # 加密模块 - 使用密文加密
             f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}')
         print("保存成功")
 
-        post_info = request.form.to_dict()
+        # 获取选择的加密手法
+        secret_method = post_info.get("sec_method")
+        print(f'选择的加密手法为 {secret_method}')
+
         # 获取加密参数
         secret_text = post_info.get("secret")
         # 获取原照片路径
@@ -185,14 +200,21 @@ def mimi():  # 加密模块 - 使用密文加密
         # 获取处理后照片路径
         mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{secure_filename(f.filename)}'
         print(secret_text, src_img_path, mod_img_path)
-
-        lsb.jiami(secret_text, src_img_path, mod_img_path)
+        if secret_method == "lsb":
+            lsb.jiami(secret_text, src_img_path, mod_img_path)
+        else:
+            pass
+            # TODO 其他加密解密方案
+            
         # 记录行为记录
-        db.session.add(Operate(user_id, 1, secure_filename(f.filename), 0, ""))
+        db.session.add(Operate(user_id, 1, secret_method,
+                               secure_filename(f.filename), 0, ""))
         db.session.commit()
         return render_template("upload_result.html", mod_img_path=secure_filename(f.filename))
+    
+    # TODO 获取全部方法 
 
-    return render_template("upload.html")
+    return render_template("upload.html", all_method=all_method)
 
 
 @app.route("/jiemi", methods=["GET", "POST"])
@@ -212,7 +234,7 @@ def demi():
         mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{post_info.get("mod_img_path")}.bmp'
         # 记录行为记录
         db.session.add(
-            Operate(user_id, 2, post_info.get("mod_img_path")+".bmp", 0, ""))
+            Operate(user_id, 2, "none", post_info.get("mod_img_path")+".bmp", 0, ""))
         db.session.commit()
         secret_text = lsb.jiemi(mod_img_path)
         print(secret_text)
@@ -227,6 +249,8 @@ def demi2():
     # 解密模块 用户亲自上传文件
     if request.method == "POST":
         # 前期准备
+        post_info = request.form.to_dict()
+        succ = 1
         f = request.files['file']
         basepath = os.path.dirname(__file__)  # 当前文件所在路径
         user_id = current_user.id
@@ -241,13 +265,30 @@ def demi2():
 
         mod_img_path = f'{basepath}/static/uploads/{str(user_id)}self/{secure_filename(f.filename)}'
         f.save(mod_img_path)
-        secret_text = lsb.jiemi(mod_img_path)
+
+        # 获取选择的加密手法
+        secret_method = post_info.get("sec_method")
+        print(f'选择的加密手法为 {secret_method}')
+
+        secret_text = ""
+        # try:
+        if secret_method == "lsb":
+            secret_text = lsb.jiemi(mod_img_path)
+        else:
+            # TODO 其他加密解密方案
+            pass
+
+        if len(secret_text) < 100 and len(secret_text) != 0:
+            print("似乎对了")
+            succ = 0
+        print("疑似长度为", len(secret_text))
+
         # 记录行为记录
-        db.session.add(Operate(user_id, 3, secure_filename(f.filename), 0, ""))
+        db.session.add(Operate(user_id, 3, "none", secure_filename(f.filename), 0, ""))
         db.session.commit()
         
-        return render_template("/jiemi_result.html", secret_text=secret_text)
-    return render_template("jiemi2.html")
+        return render_template("/jiemi_result.html", secret_text=secret_text, succ=succ)
+    return render_template("jiemi2.html",  all_method=all_method)
 
 
 @app.route("/tip/<mod_img_path>")

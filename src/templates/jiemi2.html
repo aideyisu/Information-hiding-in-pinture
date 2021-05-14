@@ -20,6 +20,16 @@
                 需解密文件上传
             </div>
 
+            <div>
+                <p> 解密方法 </p>
+                <!-- 下拉框 -->
+                <select name="sec_method">
+                    {% for item in all_method %}
+                    <option value={{ item }}> {{ item }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div id="file">
                 <input type="file" name="file" class="file">
                 <input type="submit" value="上传">

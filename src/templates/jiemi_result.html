@@ -21,7 +21,11 @@
 
     <div id="content">
     <p> 密文为 </p>
+    {% if succ == 1 %}
+        <p> 结果可能有误 </p>
+    {% endif %}
     <p>{{ secret_text }}</p>
+ 
     </div>
 </body>
 

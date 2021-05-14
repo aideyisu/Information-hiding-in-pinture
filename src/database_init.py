@@ -52,6 +52,8 @@ class Operate(db.Model):
     uid = db.Column(db.Integer, index=True)
     # 操作类型 （1上传源图片 2从服务端解密 3上传加密图片解密）
     op_type = db.Column(db.Integer, index=True)
+    # 加解密方式
+    sec_type = db.Column(db.String(64), index=True)
     # 操作具体名称
     type_name = db.Column(db.String(64), index=True)
     # 相关文件名
@@ -63,17 +65,22 @@ class Operate(db.Model):
     # 操作时间
     ctime = db.Column(db.DateTime, default=datetime.datetime.now)
     
-    def __init__(self, uid, op_type, filename, op_result, fail_source):
+    def __init__(self, uid, op_type, sec_type, filename, op_result, fail_source):
         self.uid = uid
         self.op_type = op_type
+        self.sec_type = sec_type
         if op_type == 1:
-            self.type_name = "上传原图"
+            # 上传原图
+            self.type_name = "upload source picture"
         elif op_type == 2:
-            self.type_name = "服务端解密"
+            # 服务端解密
+            self.type_name = "server decode"
         elif op_type == 3:
-            self.type_name = "上传解密"
+            # 上传解密
+            self.type_name = "upload decode"
         else:
-            self.type_name = "未定义"
+            # 尚未定义 undefined
+            self.type_name = "undefined"
         self.filename = filename
         self.op_result = op_result
         self.fail_source = fail_source

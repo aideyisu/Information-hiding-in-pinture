@@ -19,10 +19,21 @@
             <div id="info-header">
                 个人信息
             </div>
+            
+            <div>
+                <p> 加密方法 </p>
+                <!-- 下拉框 -->
+                <select name="sec_method">
+                    {% for item in all_method %}
+                    <option value={{ item }}> {{ item }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <div id="secret" class="info-input-box">
                 <input type="text" placeholder="密文" name=secret>
             </div>
-
+            
             <div id="file">
                 <input type="file" name="file" class="file">
                 <input type="submit" value="上传">
