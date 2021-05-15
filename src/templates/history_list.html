@@ -29,7 +29,7 @@
                 <h2 id="title">用户操作历史记录</h2>
                 <div id="list">
                     {% for item in history_operate_list %}
-                        {% if item.op_result == 0 %}、
+                        {% if item.op_result == 0 %}
                             <a href="#" class="list-group-item">{{ item.type_name }} - {{ item.filename }}                   
                                 <span class="label label-success">成功</span>
                                 <span class="badge">{{ item.ctime }}</span>

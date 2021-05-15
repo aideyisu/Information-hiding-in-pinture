@@ -280,7 +280,7 @@ def demi2():
 
         if len(secret_text) < 100 and len(secret_text) != 0:
             print("似乎对了")
-            succ = 0
+            succ = 0    
         print("疑似长度为", len(secret_text))
 
         # 记录行为记录
