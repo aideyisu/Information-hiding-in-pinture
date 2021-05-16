@@ -17,9 +17,11 @@ pymysql.install_as_MySQLdb()
 
 # 本地内部引用
 import lsb
+import site_jiami
+import site_jiemi
 
 # 罪恶的全局变量
-all_method = ["lsb", "none"]
+all_method = ["lsb", "site"]
 
 app = Flask(__name__, static_folder="static")
 
@@ -172,36 +174,52 @@ def mimi():  # 加密模块 - 使用密文加密
         user_id = current_user.id
         print(f'当前登陆用户id {user_id}')
 
-        # 检测是否存在对应路径
-        my_file = Path(f'{basepath}/static/uploads/{str(user_id)}mod')
-        if not my_file.is_dir():
-            # 不存在
-            os.mkdir(my_file)  # 只能创建单级目录
-            print(f'路径不存在 {my_file}')
-
-        my_file = Path(f'{basepath}/static/uploads/{str(user_id)}')
-        if not my_file.is_dir():
-            # 不存在
-            os.mkdir(my_file)  # 只能创建单级目录
-            print(f'路径不存在 {my_file}')
-        
-        f.save(
-            f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}')
-        print("保存成功")
-
         # 获取选择的加密手法
         secret_method = post_info.get("sec_method")
         print(f'选择的加密手法为 {secret_method}')
 
         # 获取加密参数
         secret_text = post_info.get("secret")
-        # 获取原照片路径
-        src_img_path = f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}'
-        # 获取处理后照片路径
-        mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{secure_filename(f.filename)}'
-        print(secret_text, src_img_path, mod_img_path)
+
         if secret_method == "lsb":
+            # 检测是否存在对应路径
+            my_file = Path(f'{basepath}/static/uploads/{str(user_id)}mod')
+            if not my_file.is_dir():
+                # 不存在
+                os.mkdir(my_file)  # 只能创建单级目录
+                print(f'路径不存在 {my_file}')
+
+            my_file = Path(f'{basepath}/static/uploads/{str(user_id)}')
+            if not my_file.is_dir():
+                # 不存在
+                os.mkdir(my_file)  # 只能创建单级目录
+                print(f'路径不存在 {my_file}')
+            
+            f.save(
+                f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}')
+            print("保存成功")
+
+            # 获取原照片路径
+            src_img_path = f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}'
+            # 获取处理后照片路径
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{secure_filename(f.filename)}'
+            print(secret_text, src_img_path, mod_img_path)
+    
             lsb.jiami(secret_text, src_img_path, mod_img_path)
+        elif secret_method == "site":
+            # 检测是否存在对应路径
+            my_file = Path(f'{basepath}/static/uploads/{str(user_id)}site')
+            if not my_file.is_dir():
+                # 不存在
+                os.mkdir(my_file)  # 只能创建单级目录
+                print(f'路径不存在 {my_file}')
+
+            # TODO res.png优化 
+            # 获取处理后照片路径
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}site/res.png'
+            # 实际存储位置
+            save_path = f'static/uploads/{str(user_id)}site/res.png'
+            site_jiami.site_jiami(secret_text, save_path)
         else:
             pass
             # TODO 其他加密解密方案
@@ -226,21 +244,37 @@ def demi():
         basepath = os.path.dirname(__file__)  # 当前文件所在路径
         user_id = current_user.id
         print(f'当前登陆用户id {user_id}')
-
+        secret_text = ""
         # 获取提交数据
         post_info = request.form.to_dict()    
-        # 加密图像路径
-        # mod_img_path = post_info.get("mod_img_path")
-        mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{post_info.get("mod_img_path")}.bmp'
-        # 记录行为记录
-        db.session.add(
-            Operate(user_id, 2, "none", post_info.get("mod_img_path")+".bmp", 0, ""))
-        db.session.commit()
-        secret_text = lsb.jiemi(mod_img_path)
+
+        # 获取选择的加密手法
+        secret_method = post_info.get("sec_method")
+        print(f'选择的加密手法为 {secret_method}')
+
+
+        if secret_method == "lsb":
+            # 加密图像路径
+            # mod_img_path = post_info.get("mod_img_path")
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{post_info.get("mod_img_path")}.bmp'
+            # 记录行为记录
+            db.session.add(
+                Operate(user_id, 2, "none", post_info.get("mod_img_path")+".bmp", 0, ""))
+            db.session.commit()
+            secret_text = lsb.jiemi(mod_img_path)
+        elif secret_method == "site":
+            # 加密图像路径
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}site/{post_info.get("mod_img_path")}.png'
+
+            secret_text = site_jiemi.site_jiemi(mod_img_path)
+        else:
+            pass
+            # TODO 其他加密解密方案
         print(secret_text)
 
         return render_template("/jiemi_result.html", secret_text=secret_text)
-    return render_template("jiemi.html")
+    
+    return render_template("jiemi.html", all_method=all_method)
 
 
 @app.route("/jiemi2", methods=["GET", "POST"])
@@ -251,6 +285,7 @@ def demi2():
         # 前期准备
         post_info = request.form.to_dict()
         succ = 1
+        secret_text = ""
         f = request.files['file']
         basepath = os.path.dirname(__file__)  # 当前文件所在路径
         user_id = current_user.id
@@ -263,20 +298,37 @@ def demi2():
             os.mkdir(my_file)  # 只能创建单级目录
             print(f'路径不存在 {my_file}')
 
-        mod_img_path = f'{basepath}/static/uploads/{str(user_id)}self/{secure_filename(f.filename)}'
-        f.save(mod_img_path)
-
         # 获取选择的加密手法
         secret_method = post_info.get("sec_method")
         print(f'选择的加密手法为 {secret_method}')
 
-        secret_text = ""
-        # try:
         if secret_method == "lsb":
+            # 检测是否存在对应路径
+            my_file = Path(f'{basepath}/static/uploads/{str(user_id)}self/lsb')
+            if not my_file.is_dir():
+                # 不存在
+                os.mkdir(my_file)  # 只能创建单级目录
+                print(f'路径不存在 {my_file}')
+
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}self/lsb/{secure_filename(f.filename)}'
+            f.save(mod_img_path)
+
             secret_text = lsb.jiemi(mod_img_path)
+        elif secret_method == "site":
+            # 检测是否存在对应路径
+            my_file = Path(f'{basepath}/static/uploads/{str(user_id)}self/site')
+            if not my_file.is_dir():
+                # 不存在
+                os.mkdir(my_file)  # 只能创建单级目录
+                print(f'路径不存在 {my_file}')
+
+            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}self/site/{secure_filename(f.filename)}'
+            f.save(mod_img_path)
+
+            secret_text = site_jiemi.site_jiemi(mod_img_path)
         else:
-            # TODO 其他加密解密方案
             pass
+            # TODO 其他加密解密方案
 
         if len(secret_text) < 100 and len(secret_text) != 0:
             print("似乎对了")
@@ -287,7 +339,7 @@ def demi2():
         db.session.add(Operate(user_id, 3, "none", secure_filename(f.filename), 0, ""))
         db.session.commit()
         
-        return render_template("/jiemi_result.html", secret_text=secret_text, succ=succ)
+        return render_template("/jiemi_result.html", secret_text=secret_text, succ=succ, method = secret_method)
     return render_template("jiemi2.html",  all_method=all_method)
 
 
