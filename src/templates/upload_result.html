@@ -1,12 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>登陆</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login0.css')}}">
+</head>
+
+<body>
+
 <div id="history">
     <button type="button">
         <a href="/">主界面</a>
     </button>
 </div>
 
-<img src="tip/{{ mod_img_path }}">
+<div class="login-header">
+    英文文本信息隐藏系统 - 文本隐藏结果页
+</div>
 
+<div id="content">
+    {% if method == "lsb" %}
+        <img src="tip/lsb/{{ mod_img_path }}">
+    {% elif method == "site" %}
+        <img src="tip/site/res.png">
+    {% endif %}
+    <p></p>
 
-<a href="/download/{{ mod_img_path }}">
-    <span >下载文件</span>
-</a>
+    <a href="/download/{{ mod_img_path }}">
+        <span >下载文件</span>
+    </a>
+
+</div>
+</body>

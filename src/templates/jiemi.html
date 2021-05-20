@@ -18,11 +18,22 @@
         </div>
 
     <div class="login-header">
-        信息加密云平台
+        英文文本信息隐藏系统
     </div>
 
     <div id="content">
         <form action="" method="POST" id="nameform">
+        
+            <div>
+                <p> 解密方法 </p>
+                <!-- 下拉框 -->
+                <select name="sec_method">
+                    {% for item in all_method %}
+                    <option value={{ item }}> {{ item }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="login-input-box">
                 <input type="text" placeholder="输入文件名(不含后缀)" name=mod_img_path>
             </div>

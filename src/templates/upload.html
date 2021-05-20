@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login0.css')}}">
 </head>
 
 <body>
@@ -14,33 +15,39 @@
             </button>
         </div>
     </div>
-    <div id="info">
-        <form action="" enctype='multipart/form-data' method='POST'>
-            <div id="info-header">
-                个人信息
-            </div>
-            
-            <div>
-                <p> 加密方法 </p>
-                <!-- 下拉框 -->
-                <select name="sec_method">
-                    {% for item in all_method %}
-                    <option value={{ item }}> {{ item }} </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div id="secret" class="info-input-box">
-                <input type="text" placeholder="密文" name=secret>
-            </div>
-            
-            <div id="file">
-                <input type="file" name="file" class="file">
-                <input type="submit" value="上传">
-            </div>
-
-        </form>
+    
+    <div class="login-header">
+        英文文本信息隐藏系统 - 文本信息隐藏
     </div>
 
+    <div id="content">
+        <div id="info">
+            <form action="" enctype='multipart/form-data' method='POST'>
+                <!-- <div id="info-header">
+                    个人信息
+                </div>
+                 -->
+                <div>
+                    <p> 下拉选择加密方法 </p>
+                    <!-- 下拉框 -->
+                    <select name="sec_method">
+                        {% for item in all_method %}
+                        <option value={{ item }}> {{ item }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                    <p>  </p>
+                <div id="secret" class="info-input-box">
+                    <input type="text" placeholder="密文" name=secret>
+                </div>
+                    <p>  </p>
+                <div id="file">
+                    <input type="file" name="file" class="file">
+                    <input type="submit" value="上传">
+                </div>
+
+            </form>
+        </div>
+    </div>
 </body>
 </html>

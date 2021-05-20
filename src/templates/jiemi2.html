@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>解密</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/login0.css')}}">
 </head>
 
 <body>
@@ -14,28 +15,36 @@
             </button>
         </div>
     </div>
-    <div id="info">
-        <form action="" enctype='multipart/form-data' method='POST'>
-            <div id="info-header">
-                需解密文件上传
-            </div>
 
-            <div>
-                <p> 解密方法 </p>
-                <!-- 下拉框 -->
-                <select name="sec_method">
-                    {% for item in all_method %}
-                    <option value={{ item }}> {{ item }} </option>
-                    {% endfor %}
-                </select>
-            </div>
+    <div class="login-header">
+        英文文本信息隐藏系统 - 图像解密
+    </div>
 
-            <div id="file">
-                <input type="file" name="file" class="file">
-                <input type="submit" value="上传">
-            </div>
 
-        </form>
+    <div id="content">
+        <div id="info">
+            <form action="" enctype='multipart/form-data' method='POST'>
+                <div id="info-header">
+                    需解密文件上传
+                </div>
+
+                <div>
+                    <p> 解密方法 </p>
+                    <!-- 下拉框 -->
+                    <select name="sec_method">
+                        {% for item in all_method %}
+                        <option value={{ item }}> {{ item }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                    <p> </p>
+                <div id="file">
+                    <input type="file" name="file" class="file">
+                    <input type="submit" value="上传">
+                </div>
+
+            </form>
+        </div>
     </div>
 
 </body>

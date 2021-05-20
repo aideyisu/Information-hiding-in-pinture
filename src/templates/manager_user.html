@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/bootstrapt/css/bootstrap.min.css')}}" />
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/manager.css')}}">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.css">
+</head>
+
+<body>
+    <div class="login-header" >
+        英文文本信息隐藏系统
+    </div>
+
+    <div id="content">
+        <div class="login-header"  align="center">
+            全体用户管理
+        </div>
+        <h1 align="left"> 新增用户信息 </h1>
+        <table border="1" >
+            <tr>
+                <th> 新用户昵称 </th>
+                <th> 新用户联系方式 </th>
+                <th> 新用户密码 </th>
+                <th>  </th>
+            </tr>
+        <form action="" method="POST">
+            <tr>
+                <td> <input type="text" name="newman"> </td>
+                <td> <input type="text" name="newphone"> </td>
+                <td> <input type="text" name="newpw"> </td>
+                <td> <input type="submit" value="创建新用户"> </td>
+            </tr>
+        </form>
+        </table>
+        <p></p>
+
+
+        <h1 align="left"> 修改用户信息 </h1>
+        <table border="1" >
+            <tr>
+                <th> 修改用户id </th>
+                <th> 修改昵称 </th>
+                <th> 修改联系方式 </th>
+                <th> 修改密码 </th>
+                <th> </th>
+            </tr>
+            <form action="" method="POST">
+                <tr>
+                    <td> <input type="text" name="reid"> </td>
+                    <td> <input type="text" name="rename"> </td>
+                    <td> <input type="text" name="rephone"> </td>
+                    <td> <input type="text" name="repw"> </td>
+                    <td> <input type="submit" value="修改此用户信息"> </td>
+                </tr>
+            </form>
+        </table>
+        <p></p>
+
+
+        <h1 align="left"> 用户查询 </h1>
+        <table border="1" width="650" >
+
+            <tr>
+                <th> 用户id </th>
+                <th> 用户联系方式 </th>
+                <th> 用户昵称 </th>
+                <th> 用户密码 </th>
+                <th>  </th>
+            </tr>
+            {% for user_data in all_info %}
+            {% if user_data.id == 1 %}
+            <tr>
+                <td> {{ user_data.id }}</td>
+                <td> {{ user_data.phone }} </td>
+                <td> {{ user_data.name }} </td>
+                <td> {{ user_data.password }} </td>
+                <td>
+                    <p> 管理员账号 </p>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+            <td> {{ user_data.id }}</td>
+            <td> {{ user_data.phone }} </td>
+            <td> {{ user_data.name }} </td>
+            <td> {{ user_data.password }} </td>
+            <td>
+                <a href="/deuser/{{ user_data.id }}">
+                <button>删除用户</button>
+                </a> 
+            </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+
+        </table>
+
+    </div>
+</body>
+
+</html>
