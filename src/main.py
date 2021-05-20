@@ -59,6 +59,7 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(64), unique=True)
     # email = db.Column(db.String(64),unique=True)
     password = db.Column(db.String(64))
+    status = db.Column(db.Integer, index=True)  # 账户状态 0 为正常 -1 为被管理员删除
     # role_id = db.Column(db.Integer, db.ForeignKey('roles.id')) # 设置外键
 
     def __init__(self, name, phone, password):
@@ -66,9 +67,26 @@ class User(UserMixin, db.Model):
         self.name = name
         self.phone = phone
         self.password = password
+        self.status = 0
 
     def __repr__(self):
         return "%d/%s/%s/%s" % (self.id, self.name, self.phone, self.password)
+
+class Loghis(db.Model):
+    # 定义表名
+    __tablename__ = 'loghis'
+    # 定义字段
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    # 用户id
+    uid = db.Column(db.Integer, index=True)
+    # 登陆是否成功 (0成功 1失败)
+    succ = db.Column(db.Integer, index=True)
+    # 操作时间
+    ctime = db.Column(db.DateTime, default=datetime.datetime.now)
+    
+    def __init__(self, uid, succ):
+        self.uid = uid
+        self.succ = succ
 
 
 class Operate(db.Model):
@@ -228,7 +246,7 @@ def mimi():  # 加密模块 - 使用密文加密
         db.session.add(Operate(user_id, 1, secret_method,
                                secure_filename(f.filename), 0, ""))
         db.session.commit()
-        return render_template("upload_result.html", mod_img_path=secure_filename(f.filename))
+        return render_template("upload_result.html", mod_img_path=secure_filename(f.filename), method=secret_method)
     
     # TODO 获取全部方法 
 
@@ -343,11 +361,20 @@ def demi2():
     return render_template("jiemi2.html",  all_method=all_method)
 
 
-@app.route("/tip/<mod_img_path>")
+@app.route("/tip/<method>/<mod_img_path>")
 @login_required
-def tip(mod_img_path):
+def tip(method, mod_img_path):
     # 展示上传并加密后的图片
-    return app.send_static_file(f"uploads/{current_user.id}mod/{mod_img_path}")
+    print(method)
+    print(method)
+    print(method)
+    print(method)
+    print(method)
+    # return app.send_static_file(f"uploads/{current_user.id}site/{mod_img_path}")
+    if method == "lsb":
+        return app.send_static_file(f"uploads/{current_user.id}mod/{mod_img_path}")
+    else:
+        return app.send_static_file(f"uploads/{current_user.id}site/res.png")
 
 
 @app.route("/download/<mod_img_path>")
@@ -372,6 +399,61 @@ def history_list():
         print(item.type_name)
     return render_template("history_list.html",history_operate_list = history_operate_list, uid=uid)
 
+@app.route("/history_m")
+@login_required
+def history_listm():
+    # history list
+    # 历史操作记录
+    uid = current_user.id
+    # 检测是否存在对应路径,读取list
+    history_operate_list = Operate.query.all()
+
+    return render_template("history_list_m.html",history_operate_list = history_operate_list)
+
+
+@app.route("/loging_history")
+@login_required
+def login_list():
+    # login history list
+    uid = current_user.id
+    # 检测是否存在对应路径,读取list
+    # history_login_list = Loghis.query.filter_by(uid=uid).all()
+    history_login_list = Loghis.query.all()
+    return render_template("login_list.html",history_login_list = history_login_list, uid=uid)
+
+
+@app.route("/manager_user", methods=["GET", "POST"])
+@login_required
+def manager_user():
+    # 判断是否为管理员账户
+    user_id = current_user.id
+    if not is_admin(user_id):
+        return redirect("/")
+
+    # 拉取全部用户信息进行展示
+    all_info = User.query.filter(User.status == 0).all()
+
+    if request.method == "POST":
+        search_info = request.form.to_dict()
+
+        if search_info.get("newman"):
+                # 新建用户
+                db.session.add(User(search_info.get("newman"),
+                                    search_info.get("newphone"),
+                                    search_info.get("newpw"), 0))
+                db.session.commit()
+                print(f'成功添加用户 {search_info.get("newman")}')
+        elif search_info.get("reid"):
+            # 修改用户数据
+            user = User.query.get(search_info.get("reid"))
+            user.name = search_info.get("rename")
+            user.phone = int(search_info.get("rephone"))
+            user.password = search_info.get("repw")
+            db.session.commit()
+
+        return redirect("/manager_user")
+
+    return render_template("manager_user.html", all_info=all_info)
 
 @app.errorhandler(401)
 def page_not_found(e):

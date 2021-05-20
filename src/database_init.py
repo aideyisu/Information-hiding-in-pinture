@@ -1,3 +1,4 @@
+import time
 import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -28,20 +29,40 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 
 class User(db.Model):
+    # silly user model
     # 定义表名
     __tablename__ = 'users'
     # 定义字段
-    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), unique=True, index=True)
-    phone = db.Column(db.String(64),unique=True)
+    phone = db.Column(db.String(64), unique=True)
     # email = db.Column(db.String(64),unique=True)
     password = db.Column(db.String(64))
+    status = db.Column(db.Integer, index=True)  # 账户状态 0 为正常 -1 为被管理员删除
     # role_id = db.Column(db.Integer, db.ForeignKey('roles.id')) # 设置外键
+
     def __init__(self, name, phone, password):
+        # self.id = id
         self.name = name
         self.phone = phone
         self.password = password
+        self.status = 0
 
+class Loghis(db.Model):
+    # 定义表名
+    __tablename__ = 'loghis'
+    # 定义字段
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    # 用户id
+    uid = db.Column(db.Integer, index=True)
+    # 登陆是否成功 (0成功 1失败)
+    succ = db.Column(db.Integer, index=True)
+    # 操作时间
+    ctime = db.Column(db.DateTime, default=datetime.datetime.now)
+    
+    def __init__(self, uid, succ):
+        self.uid = uid
+        self.succ = succ
 
 class Operate(db.Model):
     # 定义表名
@@ -86,6 +107,7 @@ class Operate(db.Model):
         self.fail_source = fail_source
 
 
+
 if __name__ == '__main__':
     # 删除所有表
     db.drop_all()
@@ -102,3 +124,21 @@ if __name__ == '__main__':
         db.session.add(User(name, phone, password))
         db.session.commit()
         
+    for i in range(1,15):
+        db.session.add(Loghis(i, 0))
+        db.session.commit()
+        time.sleep(3)
+
+    for i in range(1,15):
+        db.session.add(Loghis(i, 0))
+        db.session.commit()
+        time.sleep(3)
+
+    for i in range(1,13):
+        db.session.add(Operate(i, 1, "lsb", f"test{i}.png", 0, ""))
+        db.session.commit()
+
+    for i in range(1,13):
+        db.session.add(Operate(i, 2, "lsb", f"test{i}.png", 0, ""))
+        db.session.commit()   
+    #    def __init__(self, uid, op_type, sec_type, filename, op_result, fail_source):
