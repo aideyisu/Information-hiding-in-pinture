@@ -37,7 +37,7 @@ zi = {
     26:"Z"
 }
 
-def mergeImg(inputImg,maskImg,contourData,drawPosition):
+def merge_Img(inputImg,maskImg,contourData,drawPosition):
     '''
     :param inputImg: 输入的图像
     :param maskImg: 输入的模板图像
@@ -89,7 +89,7 @@ def make_picture(insert_code, img, x_site, y_site):
 
     # 判断字母需要使用哪个尺寸 - 这个变量在操作过程中会发生改变,所以使用.copy只传递变量拷贝
     contourData = np.array([(0,0),(175,0), (175,154),(0,154)]) if insert_code == "W" else np.array([(0,0),(150,0), (150,150),(0,150)]) 
-    outPutImg, _ =mergeImg(img, maskImg, contourData.copy(), (x_site,y_site))
+    outPutImg, _ =merge_Img(img, maskImg, contourData.copy(), (x_site,y_site))
 
     return outPutImg
 
@@ -122,6 +122,7 @@ def site_jiami(secret_text, save_path):
     y_start = 40
 
     # 生成全黑底图 全黑的灰度图
+
     gray0=np.zeros((220*(length//10+1),2500),dtype=np.uint8)
     print(f'黑底尺寸为 {(220*(length//10+1),2500)}')
     gray0[:,:]=255

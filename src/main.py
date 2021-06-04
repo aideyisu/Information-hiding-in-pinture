@@ -365,11 +365,7 @@ def demi2():
 @login_required
 def tip(method, mod_img_path):
     # 展示上传并加密后的图片
-    print(method)
-    print(method)
-    print(method)
-    print(method)
-    print(method)
+
     # return app.send_static_file(f"uploads/{current_user.id}site/{mod_img_path}")
     if method == "lsb":
         return app.send_static_file(f"uploads/{current_user.id}mod/{mod_img_path}")
