@@ -1,5 +1,41 @@
 import cv2
+import random
 import numpy as np
+
+# 每行的间距
+strand_site_col = 170
+# 每个单词的间距
+strand_site_row = 180
+# 字母映射表
+zi = {
+    1:"A",
+    2:"B",
+    3:"C",
+    4:"D",
+    5:"E",
+    6:"F",
+    7:"G",
+    8:"H",
+    9:"I",
+    10:"J",
+    11:"K",
+    12:"L",
+    13:"M",
+    14:"N",
+    15:"O",
+    16:"P",
+    17:"Q",
+    18:"R",
+    19:"S",
+    20:"T",
+    21:"U",
+    22:"V",
+    23:"W",
+    24:"X",
+    25:"Y",
+    26:"Z"
+}
+
 def mergeImg(inputImg,maskImg,contourData,drawPosition):
     '''
     :param inputImg: 输入的图像
@@ -43,45 +79,108 @@ def mergeImg(inputImg,maskImg,contourData,drawPosition):
   
     return outPutImg,outContourData#,outRectData
 
+def make_picture(insert_code, img, x_site, y_site):
+    # 制作图像,将小的贴到大的上面
 
-if(__name__=="__main__"):
-    # 初始化
-    insert_code = "A"
-    imgStr = '12.png' # 大的那个
-    imgMaskStr = 'pic/A.png' # 小的那个
-    
     # 加载图像
-    img=cv2.imread(imgStr)
-    maskImg=cv2.imread(imgMaskStr)
-    maskImg2=cv2.imread(imgMaskStr)
-    # contourData=np.array([(0,0),(169,0), (169,209),(0,209)]) # 此处逻辑为一次 
-    
-    # 判断字母需要使用哪个尺寸
-    # if insert_code == "W":
-    #     contourData=np.array([(0,0),(175,0), (175,154),(0,154)]) 
-    # else:
-    #     contourData=np.array([(0,0),(150,0), (150,150),(0,150)]) 
-    
-    # 这个变量在操作过程中会发生改变,所以使用.copy只传递变量拷贝
+    # img=cv2.imread(big_one_path)
+    maskImg=cv2.imread(f"pic/{insert_code}.png")
+
+    # 判断字母需要使用哪个尺寸 - 这个变量在操作过程中会发生改变,所以使用.copy只传递变量拷贝
     contourData = np.array([(0,0),(175,0), (175,154),(0,154)]) if insert_code == "W" else np.array([(0,0),(150,0), (150,150),(0,150)]) 
-    print(contourData)
-    # 实施加载
-    outPutImg,outContourData=mergeImg(img, maskImg, contourData.copy(), (250,400))
+    outPutImg, _ =mergeImg(img, maskImg, contourData.copy(), (x_site,y_site))
 
-    # test 加载俩
-    # contourData = np.array([(0,0),(175,0), (175,154),(0,154)]) if insert_code == "W" else np.array([(0,0),(150,0), (150,150),(0,150)]) 
-    outPutImg2,outContourData=mergeImg(outPutImg, maskImg2, contourData, (0,200))
-    print(contourData)
-    cv2.imshow('4', outPutImg2)    
+    return outPutImg
 
-    # 展示
-    cv2.imshow('2', outPutImg)
-    cv2.imshow('3', maskImg)
+# 随机数生成
+def ran_zi():
+    return zi[random.randrange(26)]
 
-    # 保存
-    cv2.imwrite('site_result_test.png', outPutImg)
+def detect_zi(english_zi):
+    if ord(english_zi) > 96 and ord(english_zi) < 123:
+        return ord(english_zi) - 96
+    elif  ord(english_zi) > 64 and ord(english_zi) < 91:
+        return ord(english_zi) - 64
+
+
+# 加密
+def site_jiami(secret_text):
+    # 输入 1密文 
+    # 2明文(明文长度必须大于密文长度 * 1.2 + 1)保证换行可用 
+    
+    # 起始位置
+    x_start = 20
+    y_start = 20
+    imgStr0 = '12.png' # 大的那个
+    imgStr=cv2.imread(imgStr0)
+    num = 1
+    # 先打印一个字
+    Picture = make_picture(ran_zi(), imgStr, x_start, y_start)
+    cv2.imshow('2', Picture)
     cv2.waitKey(0)
+
+    for sec_item in secret_text:
+        print(f"当前是 {sec_item}")
+        x_start += (strand_site_row + detect_zi(sec_item))
+        # 打印一个字
+        Picture = make_picture(ran_zi(), Picture, x_start, y_start)
+        
+        # 收尾
+        num += 1
+        if num %10 == 0:
+            num = 1
+            x_start += strand_site_col
+
+    cv2.imshow('3', Picture)
+    # 保存
+    cv2.imwrite('site_result.png', Picture)
+    cv2.waitKey(0)    
+    return Picture
+    # 输出 加密图片一张
+
+site_jiami("wy")
+
+
+# if(__name__=="__main__"):
+#     # 初始化
+#     insert_code = "A"
+#     imgStr = '12.png' # 大的那个
+#     imgMaskStr = 'pic/A.png' # 小的那个
+    
+#     # 加载图像
+#     img=cv2.imread(imgStr)
+#     maskImg=cv2.imread(imgMaskStr)
+#     # contourData=np.a  rray([(0,0),(169,0), (169,209),(0,209)]) # 此处逻辑为一次 
+    
+#     # 判断字母需要使用哪个尺寸 - 这个变量在操作过程中会发生改变,所以使用.copy只传递变量拷贝
+#     contourData = np.array([(0,0),(175,0), (175,154),(0,154)]) if insert_code == "W" else np.array([(0,0),(150,0), (150,150),(0,150)]) 
+#     # 图像实施加载
+#     outPutImg,outContourData=mergeImg(img, maskImg, contourData.copy(), (250,400))
+
+#     # 加载俩
+#     # contourData = np.array([(0,0),(175,0), (175,154),(0,154)]) if insert_code == "W" else np.array([(0,0),(150,0), (150,150),(0,150)]) 
+#     # outPutImg2,outContourData=mergeImg(outPutImg, maskImg, contourData.copy(), (0,200))
+#     # print(contourData)
+#     # cv2.imshow('4', outPutImg2)    
+
+#     # 测试调用功能
+#     pic_test = make_picture("W", imgStr, 150, 150)
+#     cv2.imshow('9', pic_test)    
+
+#     # 展示
+#     cv2.imshow('2', outPutImg)
+#     cv2.imshow('3', maskImg)
+
+#     # 保存
+#     cv2.imwrite('site_result_test.png', outPutImg)
+#     cv2.waitKey(0)
+
+
+
 
 # ————————————————
 # 版权声明：本文为CSDN博主「captain_CasonCai」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
 # 原文链接：https://blog.csdn.net/qq_33671888/article/details/89499311  
+
+# 图像来源网址
+# http://616pic.com/sucai/zq9ijmxmv.html
