@@ -2,6 +2,7 @@ import time
 import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+import hashlib
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -45,7 +46,9 @@ class User(db.Model):
         # self.id = id
         self.name = name
         self.phone = phone
-        self.password = password
+        temp_password = hashlib.sha256()
+        temp_password.update(password.encode('utf-8'))
+        self.password = temp_password.hexdigest()
         self.status = 0
 
 class Loghis(db.Model):
@@ -59,7 +62,7 @@ class Loghis(db.Model):
     succ = db.Column(db.Integer, index=True)
     # 操作时间
     ctime = db.Column(db.DateTime, default=datetime.datetime.now)
-    
+
     def __init__(self, uid, succ):
         self.uid = uid
         self.succ = succ
@@ -85,7 +88,7 @@ class Operate(db.Model):
     fail_source = db.Column(db.String(64), index=True)
     # 操作时间
     ctime = db.Column(db.DateTime, default=datetime.datetime.now)
-    
+
     def __init__(self, uid, op_type, sec_type, filename, op_result, fail_source):
         self.uid = uid
         self.op_type = op_type
@@ -123,7 +126,7 @@ if __name__ == '__main__':
         password = name + "pw"
         db.session.add(User(name, phone, password))
         db.session.commit()
-        
+
     for i in range(1,15):
         db.session.add(Loghis(i, 0))
         db.session.commit()
@@ -140,5 +143,5 @@ if __name__ == '__main__':
 
     for i in range(1,13):
         db.session.add(Operate(i, 2, "lsb", f"test{i}.png", 0, ""))
-        db.session.commit()   
+        db.session.commit()
     #    def __init__(self, uid, op_type, sec_type, filename, op_result, fail_source):

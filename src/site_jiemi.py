@@ -56,6 +56,7 @@ def site_jiemi(pic_path):
         temp_zi = zi[i]
         template = cv2.imread(f'pic/{temp_zi}.png', 0)
         w, h = template.shape[::-1]
+        # 多模板匹配技术
         res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res >= threshold)
         # print(temp_zi, loc)

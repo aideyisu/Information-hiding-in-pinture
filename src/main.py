@@ -3,6 +3,7 @@
 
 import os
 import datetime
+import hashlib
 from pathlib import Path
 
 from flask import Flask, render_template, Response, redirect, url_for,\
@@ -66,7 +67,9 @@ class User(UserMixin, db.Model):
         # self.id = id
         self.name = name
         self.phone = phone
-        self.password = password
+        temp_password = hashlib.sha256()
+        temp_password.update(password.encode('utf-8'))
+        self.password = temp_password.hexdigest()
         self.status = 0
 
     def __repr__(self):
@@ -83,7 +86,7 @@ class Loghis(db.Model):
     succ = db.Column(db.Integer, index=True)
     # 操作时间
     ctime = db.Column(db.DateTime, default=datetime.datetime.now)
-    
+
     def __init__(self, uid, succ):
         self.uid = uid
         self.succ = succ
@@ -149,7 +152,10 @@ def login():
         user = User.query.filter_by(name=login_info.get("username")).first()
 
         if user:
-            if user.password == login_info.get("password"):
+            temp_password = hashlib.sha256()
+            temp_password.update(login_info.get("password").encode('utf-8'))
+            uplodde_password = temp_password.hexdigest()
+            if user.password == uplodde_password:
                 login_user(user)
                 print(f'用户登陆 {user.id} : {user.name}')
                 return redirect("/")
@@ -165,6 +171,11 @@ def logout():
     # somewhere to logout
     logout_user()
     return render_template("logout.html")
+
+def register_add_user(username, phone,  password):
+    #  注册普通用户
+    db.session.add(User(username, phone, password))
+    db.session.commit()
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -199,6 +210,7 @@ def mimi():  # 加密模块 - 使用密文加密
         # 获取加密参数
         secret_text = post_info.get("secret")
 
+        mod_img_path = ""
         if secret_method == "lsb":
             # 检测是否存在对应路径
             my_file = Path(f'{basepath}/static/uploads/{str(user_id)}mod')
@@ -212,7 +224,7 @@ def mimi():  # 加密模块 - 使用密文加密
                 # 不存在
                 os.mkdir(my_file)  # 只能创建单级目录
                 print(f'路径不存在 {my_file}')
-            
+
             f.save(
                 f'{basepath}/static/uploads/{str(user_id)}/{secure_filename(f.filename)}')
             print("保存成功")
@@ -222,7 +234,7 @@ def mimi():  # 加密模块 - 使用密文加密
             # 获取处理后照片路径
             mod_img_path = f'{basepath}/static/uploads/{str(user_id)}mod/{secure_filename(f.filename)}'
             print(secret_text, src_img_path, mod_img_path)
-    
+
             lsb.jiami(secret_text, src_img_path, mod_img_path)
         elif secret_method == "site":
             # 检测是否存在对应路径
@@ -232,23 +244,23 @@ def mimi():  # 加密模块 - 使用密文加密
                 os.mkdir(my_file)  # 只能创建单级目录
                 print(f'路径不存在 {my_file}')
 
-            # TODO res.png优化 
+            # TODO res.png优化
             # 获取处理后照片路径
-            mod_img_path = f'{basepath}/static/uploads/{str(user_id)}site/res.png'
+            mod_img_path = f'{basepath}/'
             # 实际存储位置
             save_path = f'static/uploads/{str(user_id)}site/res.png'
             site_jiami.site_jiami(secret_text, save_path)
         else:
             pass
             # TODO 其他加密解密方案
-            
+
         # 记录行为记录
         db.session.add(Operate(user_id, 1, secret_method,
                                secure_filename(f.filename), 0, ""))
         db.session.commit()
         return render_template("upload_result.html", mod_img_path=secure_filename(f.filename), method=secret_method)
-    
-    # TODO 获取全部方法 
+
+    # TODO 获取全部方法
 
     return render_template("upload.html", all_method=all_method)
 
@@ -264,7 +276,7 @@ def demi():
         print(f'当前登陆用户id {user_id}')
         secret_text = ""
         # 获取提交数据
-        post_info = request.form.to_dict()    
+        post_info = request.form.to_dict()
 
         # 获取选择的加密手法
         secret_method = post_info.get("sec_method")
@@ -291,7 +303,7 @@ def demi():
         print(secret_text)
 
         return render_template("/jiemi_result.html", secret_text=secret_text)
-    
+
     return render_template("jiemi.html", all_method=all_method)
 
 
@@ -350,13 +362,13 @@ def demi2():
 
         if len(secret_text) < 100 and len(secret_text) != 0:
             print("似乎对了")
-            succ = 0    
+            succ = 0
         print("疑似长度为", len(secret_text))
 
         # 记录行为记录
         db.session.add(Operate(user_id, 3, "none", secure_filename(f.filename), 0, ""))
         db.session.commit()
-        
+
         return render_template("/jiemi_result.html", secret_text=secret_text, succ=succ, method = secret_method)
     return render_template("jiemi2.html",  all_method=all_method)
 
@@ -378,7 +390,14 @@ def tip(method, mod_img_path):
 def download(mod_img_path):
     # 展示加密图片 提供下载
     basepath = os.path.dirname(__file__)  # 当前文件所在路径
-    return send_from_directory(f"{basepath}/static/uploads/{current_user.id}mod", filename=mod_img_path, as_attachment=True)
+    return send_from_directory(f"{basepath}/static/uploads/{current_user.id}mod",path=mod_img_path , filename=mod_img_path, as_attachment=True)
+
+@app.route("/download_site")
+@login_required
+def download_site():
+    # 展示加密图片 提供下载
+    basepath = os.path.dirname(__file__)  # 当前文件所在路径
+    return send_from_directory(f"{basepath}/static/uploads/{current_user.id}site", path="res.png" , filename="res.png", as_attachment=True)
 
 
 @app.route("/history")
@@ -444,7 +463,11 @@ def manager_user():
             user = User.query.get(search_info.get("reid"))
             user.name = search_info.get("rename")
             user.phone = int(search_info.get("rephone"))
-            user.password = search_info.get("repw")
+            # 密码sha-256处理
+            temp_password = hashlib.sha256()
+            temp_password.update(search_info.get("repw").encode('utf-8'))
+            user.password = temp_password.hexdigest()
+            # user.password = search_info.get("repw")
             db.session.commit()
 
         return redirect("/manager_user")

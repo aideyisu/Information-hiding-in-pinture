@@ -170,10 +170,5 @@ def site_jiami(secret_text, save_path):
 # site_jiami("hellothankwhatismybestbadcatinthehome")
 # site_jiami("hello thank you")
 
-
-# ————————————————
-# 版权声明：本文为CSDN博主「captain_CasonCai」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
-# 原文链接：https://blog.csdn.net/qq_33671888/article/details/89499311  
-
 # 图像来源网址
 # http://616pic.com/sucai/zq9ijmxmv.html
