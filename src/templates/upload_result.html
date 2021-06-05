@@ -22,13 +22,25 @@
 <div id="content">
     {% if method == "lsb" %}
         <img src="tip/lsb/{{ mod_img_path }}">
+
+        <p></p>
+
+        <a href="/download/{{ mod_img_path }}">
+            <span >下载文件</span>
+        </a>
     {% elif method == "site" %}
         <img src="tip/site/res.png">
+        <p></p>
+
+        <a href="/download_site">
+            <span >下载文件</span>
+        </a>
+
     {% endif %}
-    <p></p>
+    <!-- <p></p>
 
     <a href="/download/{{ mod_img_path }}">
         <span >下载文件</span>
-    </a>
+    </a> -->
 </div>
 </body>
